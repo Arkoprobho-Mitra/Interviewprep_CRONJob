@@ -1,0 +1,558 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════╗
+ * ║       DAILY INTERVIEW DIGEST — Google Apps Script           ║
+ * ║  • 15 AI/DS + 15 Fullstack + 5 DSA concept                  ║
+ * ║  + 5 DSA coding problems  — all at 2PM IST                  ║
+ * ╠══════════════════════════════════════════════════════════════╣
+ * ║  SETUP (one-time, ~3 minutes):                              ║
+ * ║  1. Go to script.google.com → New Project                   ║
+ * ║  2. Paste this entire file, save (Ctrl+S)                   ║
+ * ║  3. Project Settings → Script Properties → Add:            ║
+ * ║       ANTHROPIC_API_KEY  =  sk-ant-...                      ║
+ * ║       RECIPIENT_EMAIL    =  you@gmail.com                   ║
+ * ║  4. Run setupTriggers() once (select from dropdown, ▶ Run)  ║
+ * ║  5. Grant permissions when prompted                         ║
+ * ║  Done. Fully autonomous from here. No desktop needed.       ║
+ * ╚══════════════════════════════════════════════════════════════╝
+ */
+
+// ═══════════════════════════════════════════════════════════════
+// TOPIC BANKS
+// ═══════════════════════════════════════════════════════════════
+
+var AI_TOPICS = [
+  // Statistics & Math
+  ["Statistics & Math", "Probability Theory — Axioms, Conditional Probability, Bayes Theorem"],
+  ["Statistics & Math", "Distributions — Normal, Binomial, Poisson, Bernoulli, Beta, Gamma, Dirichlet"],
+  ["Statistics & Math", "Maximum Likelihood Estimation (MLE) vs Maximum A Posteriori (MAP)"],
+  ["Statistics & Math", "Information Theory — Entropy, KL Divergence, Mutual Information, Cross-Entropy"],
+  ["Statistics & Math", "Linear Algebra — Eigenvalues, SVD, PCA derivation from covariance matrix"],
+  ["Statistics & Math", "Convex Optimization — Gradient Descent, Lagrange Multipliers, KKT conditions"],
+  ["Statistics & Math", "Bayesian Inference — Prior, Posterior, Likelihood, MCMC, Variational Inference"],
+  ["Statistics & Math", "A/B Testing — Design, Sample Size, Multiple Comparisons, Pitfalls"],
+  ["Statistics & Math", "Hypothesis Testing — t-test, chi-square, ANOVA, p-values, Type I/II errors"],
+  // Machine Learning
+  ["Machine Learning", "Bias-Variance Tradeoff — mathematical decomposition, underfitting vs overfitting"],
+  ["Machine Learning", "Gradient Boosting — GBM, XGBoost, LightGBM, CatBoost internals & differences"],
+  ["Machine Learning", "Support Vector Machines — Hard/Soft margin, Kernel trick, dual formulation"],
+  ["Machine Learning", "Gaussian Mixture Models & EM Algorithm — E-step, M-step, convergence"],
+  ["Machine Learning", "Feature Selection — Filter, Wrapper, Embedded methods, SHAP importance"],
+  ["Machine Learning", "Imbalanced Data — SMOTE, class weights, threshold tuning, precision-recall tradeoff"],
+  ["Machine Learning", "Ensemble Methods — Bagging, Boosting, Stacking, Blending deep dive"],
+  ["Machine Learning", "Anomaly Detection — Isolation Forest, One-Class SVM, Autoencoders"],
+  ["Machine Learning", "Time Series — ARIMA, SARIMA, stationarity, ACF/PACF, seasonal decomposition"],
+  ["Machine Learning", "ML Pipelines & MLOps — Drift detection, Monitoring, Versioning, CI/CD for ML"],
+  // Deep Learning
+  ["Deep Learning", "Backpropagation — chain rule, computational graph, autograd mechanics"],
+  ["Deep Learning", "Vanishing/Exploding Gradients — root causes, BatchNorm, residual connections, gradient clipping"],
+  ["Deep Learning", "Optimizers — SGD, Momentum, RMSProp, Adam, AdaGrad, AdamW, Lion comparison"],
+  ["Deep Learning", "Normalization — Batch Norm, Layer Norm, Group Norm, RMS Norm internals"],
+  ["Deep Learning", "CNN Architecture — Convolution, Pooling, Stride, Dilation, Receptive Field math"],
+  ["Deep Learning", "Transformer Architecture — Self-Attention math, Multi-Head, Positional Encoding"],
+  ["Deep Learning", "Transfer Learning & Fine-tuning — feature extraction vs full fine-tune vs LoRA"],
+  ["Deep Learning", "Model Compression — Pruning, Quantization, Knowledge Distillation, Low-rank"],
+  ["Deep Learning", "Distributed Training — Data Parallelism, Model Parallelism, FSDP, DDP, ZeRO"],
+  // NLP
+  ["NLP", "Word Embeddings — Word2Vec (CBOW/Skip-gram) math, GloVe objective, FastText subword"],
+  ["NLP", "BERT Architecture — MLM objective, NSP, [CLS] token, fine-tuning vs prompting"],
+  ["NLP", "GPT Architecture — causal attention mask, autoregressive training, scaling behavior"],
+  ["NLP", "Pre-training Objectives — MLM, CLM, NSP, SBO, ELECTRA replaced token detection"],
+  ["NLP", "Text Generation Decoding — Greedy, Beam Search, Top-k, Top-p, Temperature strategies"],
+  ["NLP", "Tokenizer Design — BPE algorithm, WordPiece, SentencePiece, Unigram model"],
+  // GenAI / LLMs
+  ["GenAI & LLMs", "LLM Scaling Laws — Chinchilla, compute-optimal training, emergent abilities"],
+  ["GenAI & LLMs", "RLHF — Reward Modeling, PPO in LLM context, preference data collection, instability"],
+  ["GenAI & LLMs", "DPO, IPO, ORPO — Direct Preference Optimization math vs RLHF"],
+  ["GenAI & LLMs", "PEFT — LoRA math (low-rank decomposition), QLoRA, Prefix Tuning, Adapters"],
+  ["GenAI & LLMs", "Prompt Engineering — Zero-shot, Few-shot, Chain of Thought, Tree of Thought"],
+  ["GenAI & LLMs", "RAG — Dense retrieval, chunking strategies, re-ranking, RAGAS evaluation"],
+  ["GenAI & LLMs", "Advanced RAG — HyDE, Self-RAG, FLARE, contextual compression, hybrid search"],
+  ["GenAI & LLMs", "Vector Databases — FAISS, Pinecone, Weaviate, Chroma, HNSW vs IVF indexing"],
+  ["GenAI & LLMs", "Hallucination — causes (factuality vs faithfulness), detection, mitigation"],
+  ["GenAI & LLMs", "LLM Agents — ReAct, Reflexion, tool use, planning loops, failure modes"],
+  ["GenAI & LLMs", "Multi-Agent Systems — AutoGen, CrewAI, coordination, communication protocols"],
+  ["GenAI & LLMs", "Agent Memory — Episodic, Semantic, Working memory, External datastores design"],
+  ["GenAI & LLMs", "Diffusion Models — DDPM forward/reverse, DDIM, Score Matching, CFG"],
+  ["GenAI & LLMs", "Multimodal LLMs — LLaVA, GPT-4V, vision encoder integration, CLIP alignment"],
+  ["GenAI & LLMs", "Production LLM Systems — Latency, KV cache, continuous batching, vLLM, TGI"],
+  ["GenAI & LLMs", "AI Safety & Alignment — Constitutional AI, RLAIF, Red Teaming, Jailbreaks"],
+  ["GenAI & LLMs", "LLM Evaluation — MMLU, HellaSwag, HumanEval, LLM-as-judge, MT-Bench"],
+  // Computer Vision
+  ["Computer Vision", "Vision Transformers — ViT patch embedding, Swin hierarchical design, DeiT"],
+  ["Computer Vision", "Object Detection — R-CNN family, YOLO anchor design, DETR end-to-end"],
+  ["Computer Vision", "Contrastive Vision — CLIP training objective, DINO self-supervised, zero-shot transfer"],
+];
+
+var FULLSTACK_TOPICS = [
+  // React
+  ["React.js", "React Reconciliation — virtual DOM diffing, Fiber scheduler, priority lanes"],
+  ["React.js", "useEffect — dependency array rules, cleanup timing, common infinite loop patterns"],
+  ["React.js", "useMemo & useCallback — memoization cost, referential equality, when NOT to optimize"],
+  ["React.js", "useReducer — reducer pattern vs useState, dispatch batching, middleware analogy"],
+  ["React.js", "Custom Hooks — encapsulating side effects, sharing stateful logic, naming rules"],
+  ["React.js", "useTransition & useDeferredValue — Concurrent Mode, interruptible renders, Suspense"],
+  ["React.js", "Context API — global state pitfalls, re-render scope, context splitting strategies"],
+  ["React.js", "Redux Toolkit — RTK slices, createAsyncThunk, RTK Query vs React Query"],
+  ["React.js", "Code Splitting — React.lazy, Suspense boundaries, route-level vs component-level"],
+  ["React.js", "React Server Components — client/server boundary, 'use client', serialization limits"],
+  ["React.js", "Next.js data fetching — SSR, SSG, ISR, App Router fetch caching, revalidation"],
+  ["React.js", "TypeScript with React — generics in components, discriminated unions, event types"],
+  ["React.js", "Component Composition — compound components, render props, slots pattern"],
+  ["React.js", "React performance profiling — React DevTools Profiler, Web Vitals, LCP/INP fixes"],
+  // Spring Boot
+  ["Spring Boot", "Spring IoC Container — Bean lifecycle, ApplicationContext, @Scope, @Lazy"],
+  ["Spring Boot", "Spring AOP — Advice types, Pointcut expressions, CGLIB vs JDK dynamic proxy"],
+  ["Spring Boot", "Spring Security — SecurityFilterChain, filter ordering, AuthenticationManager flow"],
+  ["Spring Boot", "JWT + Spring Security — OncePerRequestFilter, stateless session, refresh rotation"],
+  ["Spring Boot", "@Transactional — propagation levels (REQUIRED/REQUIRES_NEW), isolation, rollback"],
+  ["Spring Boot", "N+1 Problem — detection with Hibernate stats, JOIN FETCH, @EntityGraph, batch"],
+  ["Spring Boot", "JPA Relationships — @OneToMany bidirectional, cascade types, orphanRemoval, fetch"],
+  ["Spring Boot", "Spring Boot Testing — @SpringBootTest slices, @MockBean, Testcontainers, WireMock"],
+  ["Spring Boot", "Exception Handling — @ControllerAdvice, ProblemDetail (RFC 7807), error response design"],
+  ["Spring Boot", "Spring Boot Auto-configuration — @Conditional internals, starter mechanism"],
+  // API Design
+  ["API Design", "REST Constraints — statelessness, uniform interface, HATEOAS, Richardson Maturity Model"],
+  ["API Design", "JWT — header.payload.signature, RS256 vs HS256, expiry strategy, refresh rotation"],
+  ["API Design", "OAuth 2.0 — Authorization Code + PKCE flow, Client Credentials, token introspection"],
+  ["API Design", "Rate Limiting — token bucket, leaky bucket, sliding window, Redis implementation"],
+  ["API Design", "Circuit Breaker — Closed/Open/Half-Open states, Resilience4j, bulkhead pattern"],
+  ["API Design", "GraphQL — resolver N+1 problem, DataLoader batching, schema design, subscriptions"],
+  ["API Design", "gRPC & Protobuf — .proto service definition, streaming types, vs REST trade-offs"],
+  ["API Design", "HTTP/1.1 vs HTTP/2 vs HTTP/3 — multiplexing, QUIC, header compression, prioritization"],
+  // FastAPI
+  ["FastAPI", "Dependency Injection — Depends(), class-based deps, yield deps for DB session lifecycle"],
+  ["FastAPI", "Pydantic v2 Validators — @field_validator, model_validator, @computed_field, Config"],
+  ["FastAPI", "Async vs Sync Path Operations — event loop blocking, run_in_executor, thread pool"],
+  ["FastAPI", "SQLAlchemy 2.0 Async — AsyncSession, async_sessionmaker, connection pool tuning"],
+  ["FastAPI", "OAuth2 Password Flow — OAuth2PasswordBearer, token endpoint, decode with jose"],
+  // Databases
+  ["Databases", "Transaction Isolation Levels — dirty read, non-repeatable read, phantom, serializable"],
+  ["Databases", "EXPLAIN ANALYZE — seq scan vs index scan, cost model, bitmap heap scan, joins"],
+  ["Databases", "MVCC — PostgreSQL version chain, visibility rules, vacuum, transaction id wraparound"],
+  ["Databases", "Sharding — range vs hash vs directory, hotspot avoidance, resharding challenges"],
+  ["Databases", "Redis data structures — String, Hash, ZSet, List, HyperLogLog, Streams use cases"],
+  ["Databases", "CAP Theorem — formal definition, practical examples, PACELC extension"],
+  ["Databases", "Window Functions — PARTITION BY, ORDER BY, frame clause, ROW_NUMBER vs RANK vs DENSE_RANK"],
+  ["Databases", "Index types — B-Tree internals, Hash, GIN for JSONB, partial indexes, index selectivity"],
+  // System Design
+  ["System Design", "Caching strategies — Cache-aside, Read/Write-through, Write-behind, Refresh-ahead"],
+  ["System Design", "Kafka — topics, partitions, consumer groups, offsets, ISR, log compaction, delivery guarantees"],
+  ["System Design", "CQRS — command vs query model separation, eventual consistency, projections"],
+  ["System Design", "Saga pattern — choreography vs orchestration, compensating transactions, rollback"],
+  ["System Design", "Twitter/X Feed Design — fanout-on-write vs fanout-on-read, celebrity problem"],
+  ["System Design", "Distributed Rate Limiting — Redis ZSET sliding window, Lua atomicity, multi-region"],
+  ["System Design", "Service Mesh — Istio architecture, Envoy sidecar, mTLS, circuit breaking, observability"],
+  ["System Design", "Consistent Hashing — virtual nodes, token ring, replication factor, hotspot avoidance"],
+];
+
+var DSA_TOPICS = [
+  ["Complexity",          "Amortized Analysis — aggregate, accounting, potential methods; dynamic array example"],
+  ["Arrays & Strings",    "Sliding Window — fixed vs variable size, two-pointer, multi-condition variants"],
+  ["Arrays & Strings",    "Prefix Sum — range queries, subarray sum = k, 2D prefix sum, XOR prefix"],
+  ["Arrays & Strings",    "KMP — failure function (LPS array) construction, O(n+m) pattern search"],
+  ["Linked Lists",        "Floyd's Cycle Detection — proof of convergence, finding cycle start, length"],
+  ["Stacks & Queues",     "Monotonic Stack — next greater element, largest rectangle in histogram, sum of subarray mins"],
+  ["Trees",               "Lowest Common Ancestor — binary lifting O(log n), Euler tour + RMQ approach"],
+  ["Trees",               "Segment Tree — build O(n), point update, range query, lazy propagation for range updates"],
+  ["Trees",               "Binary Indexed Tree — Fenwick construction, prefix query O(log n), 2D BIT"],
+  ["Graphs",              "Dijkstra — SSSP proof, heap-based O((V+E)log V), why it fails with negative weights"],
+  ["Graphs",              "Bellman-Ford vs SPFA — negative weight handling, negative cycle detection"],
+  ["Graphs",              "Topological Sort — Kahn's BFS, DFS coloring, cycle detection in directed graphs"],
+  ["Graphs",              "Union-Find — union by rank, path compression, inverse Ackermann α(n) complexity"],
+  ["Graphs",              "Articulation Points & Bridges — Tarjan's DFS, low[] and disc[] arrays"],
+  ["Dynamic Programming", "Longest Increasing Subsequence — O(n²) DP, O(n log n) patience sorting with binary search"],
+  ["Dynamic Programming", "0/1 Knapsack — DP table, space optimization to O(W), partition equal subset sum"],
+  ["Dynamic Programming", "Bitmask DP — TSP O(2^n * n), counting Hamiltonian paths, assignment problem"],
+  ["Dynamic Programming", "Interval DP — Matrix chain multiplication, burst balloons, palindrome partitioning"],
+  ["Binary Search",       "Binary Search on Answer — Koko bananas, minimum days, split array largest sum template"],
+  ["Heaps",               "Median of Data Stream — two heaps invariant, sliding window median variant"],
+  ["Tries",               "Compressed Trie / Radix Tree, Bitwise Trie for max XOR, auto-complete design"],
+  ["Bit Manipulation",    "Bitmask subset enumeration — O(3^n) complexity, sum over subsets (SOS DP)"],
+  ["Greedy",              "Activity Selection / Interval Scheduling — exchange argument correctness proof"],
+  ["Math",                "Modular Arithmetic — modular inverse (Fermat, extended Euclidean), CRT, fast exponentiation"],
+  ["Advanced",            "Sqrt Decomposition — Mo's algorithm O((N+Q)√N), offline query processing"],
+];
+
+// Coding problem patterns — drives fresh LeetCode-style problems each day
+var DSA_CODING_TOPICS = [
+  ["Arrays",              "Two-pointer on sorted array — pair sum, triplet sum, container with most water"],
+  ["Arrays",              "Subarray problems — Kadane's max subarray, maximum product subarray"],
+  ["Arrays",              "Sliding window — longest substring without repeating characters, minimum window substring"],
+  ["Arrays",              "Interval problems — merge intervals, insert interval, meeting rooms"],
+  ["Arrays",              "Matrix problems — spiral order, rotate 90°, search in sorted 2D matrix"],
+  ["Strings",             "Anagram / permutation detection using frequency map or sliding window"],
+  ["Strings",             "Palindrome — longest palindromic substring, valid palindrome II with one deletion"],
+  ["Strings",             "String encoding & decoding — run-length compression, decode ways"],
+  ["Strings",             "Pattern matching — implement strStr(), repeated substring pattern"],
+  ["Linked Lists",        "Reverse linked list — iterative, recursive, reverse in k-groups"],
+  ["Linked Lists",        "Merge k sorted lists using min-heap or divide and conquer"],
+  ["Linked Lists",        "LRU Cache — O(1) get/put using doubly linked list + hash map"],
+  ["Linked Lists",        "Reorder list — find middle, reverse second half, merge alternating"],
+  ["Stacks & Queues",     "Valid parentheses, minimum add to make valid, longest valid parentheses"],
+  ["Stacks & Queues",     "Daily temperatures / next greater element II (circular) — monotonic stack"],
+  ["Stacks & Queues",     "Largest rectangle in histogram — monotonic stack O(n)"],
+  ["Stacks & Queues",     "Design stack with O(1) getMin / implement queue using two stacks"],
+  ["Trees",               "Binary tree level-order zigzag, right side view, average of levels"],
+  ["Trees",               "Construct binary tree from inorder + preorder or postorder traversal"],
+  ["Trees",               "Serialize and deserialize binary tree using BFS or DFS"],
+  ["Trees",               "Maximum path sum, diameter of binary tree, balanced tree check"],
+  ["Trees",               "BST — validate, kth smallest, lowest common ancestor, inorder successor"],
+  ["Graphs",              "Number of islands, surrounded regions, max area of island — DFS/BFS"],
+  ["Graphs",              "Course schedule I & II — cycle detection via topological sort"],
+  ["Graphs",              "Word ladder — shortest transformation sequence using BFS + set"],
+  ["Graphs",              "Cheapest flights within k stops — Bellman-Ford with k relaxations"],
+  ["Dynamic Programming", "Coin change (min coins), coin change II (number of ways)"],
+  ["Dynamic Programming", "Longest common subsequence, edit distance, distinct subsequences"],
+  ["Dynamic Programming", "Word break — DP with memoization, follow-up: return all sentences"],
+  ["Dynamic Programming", "Jump game I (can reach?) and II (minimum jumps) — greedy vs DP"],
+  ["Dynamic Programming", "Regular expression matching, wildcard matching — 2D DP"],
+  ["Heaps",               "Top K frequent elements — bucket sort O(n) vs heap O(n log k)"],
+  ["Heaps",               "K closest points to origin, kth largest element in array/stream"],
+  ["Heaps",               "Task scheduler — greedy with frequency map and cooldown"],
+  ["Binary Search",       "Search in rotated sorted array I & II (with duplicates)"],
+  ["Binary Search",       "Find minimum in rotated array, find peak element — binary search"],
+  ["Binary Search",       "Median of two sorted arrays — O(log(min(m,n))) binary search on partition"],
+  ["Backtracking",        "Subsets I & II, permutations I & II — deduplication with sorting"],
+  ["Backtracking",        "Combination sum I & II, combinations — pruning with target remaining"],
+  ["Backtracking",        "Word search in grid — DFS with in-place visited marking"],
+  ["Bit Manipulation",    "Single number I/II/III, counting bits, reverse bits, missing number"],
+  ["Math & Greedy",       "Next permutation, rotate array in-place, majority element (Boyer-Moore)"],
+];
+
+// ═══════════════════════════════════════════════════════════════
+// DATE-SEEDED SELECTION (reproducible per calendar day)
+// ═══════════════════════════════════════════════════════════════
+
+function seededSample_(arr, count, seed) {
+  var a = 1664525, c = 1013904223, m = Math.pow(2, 32);
+  var state = seed;
+  function rand() { state = (a * state + c) % m; return state / m; }
+  var copy = arr.slice();
+  for (var i = copy.length - 1; i > 0; i--) {
+    var j = Math.floor(rand() * (i + 1));
+    var tmp = copy[i]; copy[i] = copy[j]; copy[j] = tmp;
+  }
+  return copy.slice(0, count);
+}
+//reseting couter
+function resetCounter() {
+  PropertiesService.getScriptProperties().setProperty('LAST_SERIAL', '2');
+}
+
+function createDigestAndAnswerFiles(subject, body) {
+  const folderId = "1JFLGZbyYR-HIIDdW4FviLDZVRjgj7EAi";
+  const folder = DriveApp.getFolderById(folderId);
+  
+  const scriptProperties = PropertiesService.getScriptProperties();
+  let lastSerial = parseInt(scriptProperties.getProperty('LAST_SERIAL')) || 0;
+  let currentSerial = lastSerial + 1;
+  
+  const timestamp = Utilities.formatDate(new Date(), "Asia/Kolkata", "yyyy-MM-dd");
+  
+  // 1. CREATE THE DIGEST (Rendered as a Google Doc)
+  const digestName = `Digest #${currentSerial} - ${timestamp}`;
+  
+  // Create a blob from the HTML content
+  const htmlBlob = Utilities.newBlob(body, 'text/html', digestName);
+  
+  // Use Drive API to "convert" the HTML blob into a Google Doc format
+  // This ensures the tables, colors, and fonts look like the email
+  const fileConfig = {
+    title: digestName,
+    parents: [{id: folderId}]
+  };
+  
+  // We use Drive.Files.insert to handle the conversion
+  // NOTE: You must enable "Drive API" in Services (left sidebar) for this to work
+  Drive.Files.insert(fileConfig, htmlBlob, {convert: true});
+
+  // 2. CREATE THE BLANK ANSWERS DOC
+  const answersName = `Answers #${currentSerial} - ${timestamp}`;
+  const answersDoc = DocumentApp.create(answersName);
+  answersDoc.saveAndClose();
+  
+  // Move Answers Doc to your folder
+  DriveApp.getFileById(answersDoc.getId()).moveTo(folder);
+  
+  scriptProperties.setProperty('LAST_SERIAL', currentSerial.toString());
+  console.log(`✅ Success: Serial #${currentSerial} converted and saved.`);
+}
+
+function getTodaySeed_() {
+  var now = new Date();
+  var ist = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  return ist.getFullYear() * 10000 + (ist.getMonth() + 1) * 100 + ist.getDate();
+}
+
+function selectTopicsForToday_() {
+  var seed = getTodaySeed_();
+  return {
+    ai:        seededSample_(AI_TOPICS,          15, seed),
+    fs:        seededSample_(FULLSTACK_TOPICS,   15, seed + 1),
+    dsa:       seededSample_(DSA_TOPICS,          5, seed + 2),
+    dsaCoding: seededSample_(DSA_CODING_TOPICS,   5, seed + 3)
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLAUDE API  (direct Anthropic)
+// ═══════════════════════════════════════════════════════════════
+
+var MODEL = "claude-sonnet-4-6";
+
+function callClaude_(system, userPrompt) {
+  var apiKey = PropertiesService.getScriptProperties().getProperty("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not set in Script Properties.");
+
+  var payload = {
+    model: MODEL,
+    max_tokens: 8192,
+    system: system,
+    messages: [{ role: "user", content: userPrompt }]
+  };
+
+  var options = {
+    method: "post",
+    contentType: "application/json",
+    headers: {
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01"
+    },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  var response = UrlFetchApp.fetch("https://api.anthropic.com/v1/messages", options);
+  var code     = response.getResponseCode();
+  var text     = response.getContentText();
+
+  if (code !== 200) {
+    throw new Error("Claude API error " + code + ": " + text.substring(0, 400));
+  }
+
+  var data = JSON.parse(text);
+  if (data.error) throw new Error("Claude API error: " + data.error.message);
+  return data.content[0].text;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// QUESTION GENERATION
+// ═══════════════════════════════════════════════════════════════
+
+var CONCEPT_SYSTEM =
+  "You are a senior technical interviewer at a top-tier AI/tech company.\n" +
+  "Generate deep, interview-quality questions that test genuine conceptual understanding — not definitions.\n" +
+  "Questions must expose misconceptions, require trade-off reasoning, or demand mechanistic understanding.\n" +
+  "Vary between: 'explain the internals of', 'when would you NOT use', 'what breaks if', 'how does X differ from Y under Z'.\n" +
+  "Format: numbered list ONLY. No preamble. No explanations. Just the questions.";
+
+var CODING_SYSTEM =
+  "You are a senior software engineer setting a coding interview.\n" +
+  "Generate exactly 5 distinct LeetCode-style coding problems. Each problem must include:\n" +
+  "  • A clear problem statement (2-4 sentences)\n" +
+  "  • Input / Output with 1 concrete example\n" +
+  "  • Constraints (array size, value range, time/space target)\n" +
+  "  • A follow-up twist (e.g. 'now do it in O(1) space' or 'handle a stream of inputs')\n" +
+  "Problems must be medium-to-hard difficulty, each covering a different pattern.\n" +
+  "Format: number each problem 1–5. No solutions. Separate problems with a blank line.";
+
+function generateConceptQuestions_(topics, sectionName, count) {
+  var topicList = topics.map(function(t) { return "- [" + t[0] + "] " + t[1]; }).join("\n");
+  var prompt =
+    "Generate exactly " + count + " deep interview questions covering these topics.\n" +
+    "Rotate across ALL topics. Each question must require deep understanding — not recall.\n\n" +
+    "Topics:\n" + topicList + "\n\nGenerate " + count + " questions:";
+
+  var raw   = callClaude_(CONCEPT_SYSTEM, prompt);
+  var lines = raw.split("\n").map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 0; });
+  var out   = [];
+  lines.forEach(function(line) {
+    var q = line.replace(/^\d+[\.\)]\s*/, "").trim();
+    if (q.length > 20) out.push(q);
+  });
+  return out.slice(0, count);
+}
+
+function generateCodingProblems_(topics) {
+  var topicList = topics.map(function(t) { return "- [" + t[0] + "] " + t[1]; }).join("\n");
+  var prompt =
+    "Generate 5 coding problems based on these patterns — each problem must map to one pattern " +
+    "but present a fresh, original scenario:\n\n" + topicList + "\n\nProblems:";
+  return callClaude_(CODING_SYSTEM, prompt);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EMAIL HTML BUILDER
+// ═══════════════════════════════════════════════════════════════
+
+function buildQuestionEmail_(aiQs, fsQs, dsaQs, codingRaw, dateStr) {
+
+  function conceptSection(title, color, emoji, questions) {
+    var rows = questions.map(function(q, i) {
+      return '<tr>' +
+        '<td style="padding:10px 0;border-bottom:1px solid #f0f0f0;vertical-align:top;width:28px">' +
+        '<span style="color:' + color + ';font-weight:700;font-size:15px">' + (i + 1) + '.</span></td>' +
+        '<td style="padding:10px 0 10px 14px;border-bottom:1px solid #f0f0f0;font-size:14px;' +
+        'line-height:1.65;color:#1a1a2e">' + q + '</td></tr>';
+    }).join("");
+    return '<div style="margin-bottom:36px">' +
+      '<h2 style="margin:0 0 16px;padding:12px 18px;background:' + color +
+      ';color:#fff;border-radius:8px;font-size:15px;letter-spacing:.3px">' +
+      emoji + ' ' + title +
+      ' <span style="font-weight:400;font-size:12px;opacity:.8">(' + questions.length + ' questions)</span></h2>' +
+      '<table style="width:100%;border-collapse:collapse">' + rows + '</table></div>';
+  }
+
+function codingSection(rawText) {
+  // ✅ FIX: prepend newline so problem 1 is also caught by the split
+  var normalized = "\n" + rawText.trim();
+  
+  var problems = normalized
+    .split(/\n(?=\d+[\.\)]\s)/)
+    .map(function(p) { return p.trim(); })
+    .filter(function(p) { return p.length > 0 && /^\d+[\.\)]/.test(p); });
+
+  // Safety fallback — if split still fails, try splitting on blank lines
+  if (problems.length === 0) {
+    problems = rawText
+      .split(/\n\s*\n/)
+      .map(function(p) { return p.trim(); })
+      .filter(function(p) { return p.length > 0; });
+  }
+
+  if (problems.length === 0) {
+    return '<div style="margin-bottom:36px">' +
+      '<h2 style="margin:0 0 16px;padding:12px 18px;background:#b45309;color:#fff;' +
+      'border-radius:8px;font-size:15px;letter-spacing:.3px">' +
+      '💻 DSA Coding Problems</h2>' +
+      '<p style="color:#374151;padding:14px 16px">' + rawText + '</p></div>';
+  }
+
+  var cards = problems.map(function(prob, idx) {
+    var lines     = prob.trim().split("\n");
+    var titleLine = lines[0].replace(/^\d+[\.\)]\s*/, "").trim();
+    var body      = lines.slice(1).join("\n").trim().replace(/\n/g, "<br>");
+    return '<div style="margin-bottom:14px;border:1px solid #fde68a;border-radius:8px;overflow:hidden">' +
+      '<div style="background:#fef3c7;padding:10px 16px;border-bottom:1px solid #fde68a">' +
+      '<span style="color:#92400e;font-weight:700;font-size:14px">Problem ' + (idx + 1) + '</span>' +
+      '<span style="color:#1a1a2e;font-weight:600;font-size:14px"> — ' + titleLine + '</span></div>' +
+      '<div style="padding:14px 16px;font-size:13.5px;line-height:1.8;color:#374151">' + body + '</div></div>';
+  }).join("");
+
+  return '<div style="margin-bottom:36px">' +
+    '<h2 style="margin:0 0 16px;padding:12px 18px;background:#b45309;color:#fff;' +
+    'border-radius:8px;font-size:15px;letter-spacing:.3px">' +
+    '💻 DSA Coding Problems ' +
+    '<span style="font-weight:400;font-size:12px;opacity:.8">(5 problems — write code, then check)</span></h2>' +
+    cards + '</div>';
+}
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>' +
+    '<body style="font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;background:#f4f6fb;margin:0;padding:24px">' +
+    '<div style="max-width:740px;margin:0 auto;background:#fff;border-radius:12px;' +
+    'box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden">' +
+
+    '<div style="background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);padding:32px 36px;text-align:center">' +
+    '<div style="font-size:32px;margin-bottom:10px">🧠</div>' +
+    '<h1 style="color:#fff;margin:0;font-size:22px;letter-spacing:-.5px">Daily Interview Digest</h1>' +
+    '<p style="color:rgba(255,255,255,.6);margin:8px 0 0;font-size:13px;font-family:monospace">' +
+    dateStr + ' &nbsp;·&nbsp; 40 Questions (35 concept + 5 coding)</p></div>' +
+
+    '<div style="padding:32px 36px">' +
+    '<p style="color:#555;font-size:13px;margin:0 0 28px;padding:12px 16px;' +
+    'background:#fffbeb;border-left:3px solid #f59e0b;border-radius:4px">' +
+    '💡 <strong>How to use:</strong> Answer every concept question in your head first. ' +
+    'For coding problems — write actual code before checking solutions. Struggle is the signal.</p>' +
+
+    conceptSection("Premium AI / Data Science", "#6366f1", "🤖", aiQs) +
+    conceptSection("Full Stack Engineering",    "#059669", "⚙️",  fsQs) +
+    conceptSection("DSA Mastery — Concepts",    "#dc2626", "🔢",  dsaQs) +
+    codingSection(codingRaw) +
+    '</div>' +
+
+    '<div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:20px 36px;text-align:center">' +
+    '<p style="color:#9ca3af;font-size:12px;margin:0">' +
+    '🚀 40 questions/day · rotating through 54 AI + 53 Fullstack + 25 DSA + 42 coding patterns · Stay sharp.</p>' +
+    '</div></div></body></html>';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN ENTRY POINT
+// ═══════════════════════════════════════════════════════════════
+
+function sendQuestions() {
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var email = props.getProperty("RECIPIENT_EMAIL");
+    if (!email) throw new Error("RECIPIENT_EMAIL not set in Script Properties.");
+
+    var topics = selectTopicsForToday_();
+    Logger.log("Seed: " + getTodaySeed_());
+
+    var aiQs      = generateConceptQuestions_(topics.ai,  "AI/Data Science",       15);
+    var fsQs      = generateConceptQuestions_(topics.fs,  "Full Stack Engineering", 15);
+    var dsaQs     = generateConceptQuestions_(topics.dsa, "DSA Mastery",             5);
+    var codingRaw = generateCodingProblems_(topics.dsaCoding);
+
+    var ist     = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    var dateStr = ist.toLocaleDateString("en-IN", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata"
+    });
+
+    var html = buildQuestionEmail_(aiQs, fsQs, dsaQs, codingRaw, dateStr);
+
+    // ✅ FIX: Save digest to Drive
+    var subject = "🧠 Daily Digest — " + dateStr + " | 40 Interview Questions";
+    createDigestAndAnswerFiles(subject, html);
+
+    GmailApp.sendEmail(
+      email,
+      subject,
+      "",
+      { htmlBody: html }
+    );
+    Logger.log("✅ Digest sent to " + email);
+
+  } catch (e) {
+    Logger.log("❌ Error: " + e.message);
+    try {
+      var em = PropertiesService.getScriptProperties().getProperty("RECIPIENT_EMAIL");
+      if (em) GmailApp.sendEmail(em, "⚠️ Daily Digest Error", e.message + "\n\nStack:\n" + e.stack);
+    } catch (_) {}
+    throw e;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ONE-TIME SETUP — Run ONCE to install the daily 6AM trigger
+// ═══════════════════════════════════════════════════════════════
+
+function setupTriggers() {
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === "sendQuestions") ScriptApp.deleteTrigger(t);
+  });
+
+  ScriptApp.newTrigger("sendQuestions")
+    .timeBased()
+    .atHour(6)
+    .nearMinute(0)
+    .inTimezone("Asia/Kolkata")
+    .everyDays(1)
+    .create();
+
+  // ✅ FIX: Verify only one trigger was created
+  var count = ScriptApp.getProjectTriggers().filter(function(t) {
+    return t.getHandlerFunction() === "sendQuestions";
+  }).length;
+
+  Logger.log("✅ Trigger set: sendQuestions → 6:00 AM IST daily");
+  Logger.log("⚠️ Active sendQuestions triggers: " + count + (count > 1 ? " — WARNING: duplicates detected! Run setupTriggers() again to clean up." : " — OK"));
+  Logger.log("Run testDigest() to fire it right now and verify.");
+}
+// ═══════════════════════════════════════════════════════════════
+// MANUAL TEST — Run this to get today's digest immediately
+// ═══════════════════════════════════════════════════════════════
+
+function testDigest() {
+  Logger.log("Generating today's digest...");
+  sendQuestions();
+}
