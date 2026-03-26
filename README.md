@@ -171,7 +171,7 @@ ScriptApp.newTrigger("sendQuestions")
   .timeBased()
   .atHour(6)           // ← change to your preferred hour (24h format)
   .nearMinute(0)
-  .inTimezone("Asia/Kolkata")   // ← change to your timezone
+  .inTimezone("Timezone")   // ← change to your timezone
   .everyDays(1)
   .create();
 ```
