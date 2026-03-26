@@ -81,7 +81,7 @@ In Project Settings, enable **"Show appsscript.json manifest file in editor"**, 
 
 ```json
 {
-  "timeZone": "Asia/Kolkata",
+  "timeZone": "PUT your Timezone here",
   "dependencies": {},
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
