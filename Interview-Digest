@@ -240,7 +240,7 @@ function resetCounter() {
 }
 
 function createDigestAndAnswerFiles(subject, body) {
-  const folderId = "1JFLGZbyYR-HIIDdW4FviLDZVRjgj7EAi";
+  const folderId = "PASTE Your Drive Folder ID Here";
   const folder = DriveApp.getFolderById(folderId);
   
   const scriptProperties = PropertiesService.getScriptProperties();
